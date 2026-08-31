@@ -1,0 +1,63 @@
+name: Build self-contained index.html
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/build-single-html.py'
+      - 'src/index.source.html'
+      - 'assets/sketchbook/car.glb'
+      - 'assets/sketchbook/boxman.glb'
+      - '.github/workflows/build-single-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare editable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src
+          if [ ! -f src/index.source.html ]; then
+            cp index.html src/index.source.html
+          fi
+
+      - name: Build true single-file game
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build-single-html.py
+
+      - name: Verify no external runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'SELF_CONTAINED_BUILD' index.html
+          ! grep -q 'assets/sketchbook/car.glb' index.html
+          ! grep -q 'assets/sketchbook/boxman.glb' index.html
+          ! grep -q 'cdn.jsdelivr.net/npm/three' index.html
+          ! grep -q 'cdnjs.cloudflare.com/ajax/libs/three' index.html
+          ! grep -q 'unpkg.com/three' index.html
+          echo "Self-contained index verification passed."
+
+      - name: Commit generated index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/index.source.html index.html
+          if git diff --cached --quiet; then
+            echo "Single-file build already up to date."
+            exit 0
+          fi
+          git commit -m "build: generate self-contained index.html"
+          git push
