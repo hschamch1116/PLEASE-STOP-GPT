@@ -48,6 +48,22 @@ jobs:
           ! grep -q 'unpkg.com/three' index.html
           echo "Self-contained index verification passed."
 
+      - name: Package downloadable build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp index.html dist/index.html
+
+      - name: Upload downloadable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLEASE-STOP-GPT-index
+          path: dist/index.html
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
       - name: Commit generated index
         shell: bash
         run: |
