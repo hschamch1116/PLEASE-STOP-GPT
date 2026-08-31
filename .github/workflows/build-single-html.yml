@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'tools/build-single-html.py'
+      - 'tools/boost-events.py'
       - 'src/index.source.html'
       - 'assets/sketchbook/car.glb'
       - 'assets/sketchbook/boxman.glb'
@@ -30,6 +31,12 @@ jobs:
             cp index.html src/index.source.html
           fi
 
+      - name: Boost world events
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/boost-events.py
+
       - name: Build true single-file game
         shell: bash
         run: |
@@ -41,6 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           grep -q 'SELF_CONTAINED_BUILD' index.html
+          grep -q 'EVENT_CLARITY_V2' index.html
           ! grep -q 'assets/sketchbook/car.glb' index.html
           ! grep -q 'assets/sketchbook/boxman.glb' index.html
           ! grep -q 'cdn.jsdelivr.net/npm/three' index.html
