@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#d9d6cf">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>PLEASE STOP, GPT</title>
+<!--
+Sketchbook vehicle + character assets
+Source: https://github.com/swift502/Sketchbook
+MIT License
+Copyright (c) 2020 swift502
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#d9d6cf;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;touch-action:none}
+#stage{position:fixed;inset:0;overflow:hidden}
+#stage canvas{display:block;width:100%!important;height:100%!important}
+#ui{position:fixed;inset:0;pointer-events:none;color:#181818;z-index:4}
+#title{position:absolute;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));font-weight:900;letter-spacing:-.045em;font-size:clamp(20px,5vw,34px)}
+#sub{font-size:10px;font-weight:800;letter-spacing:.16em;opacity:.48;margin-top:2px}
+#hint{position:absolute;left:50%;bottom:max(28px,calc(env(safe-area-inset-bottom) + 18px));transform:translateX(-50%);padding:9px 14px;border:1px solid #7777;border-radius:999px;background:#f5f3edcc;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:12px;white-space:nowrap;transition:.3s}
+#mirror{position:absolute;left:50%;top:max(18px,calc(env(safe-area-inset-top) + 10px));transform:translateX(-50%);width:min(228px,54vw);height:92px;border:5px solid #444;border-radius:13px 13px 19px 19px;background:linear-gradient(#b9b9b9,#dfdfdf);box-shadow:0 8px 22px #0003;overflow:visible}
+#mirror:after{content:"";position:absolute;left:50%;top:100%;width:4px;height:20px;background:#444;transform:translateX(-50%)}
+#petViewport{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:118px;height:78px;pointer-events:none}
+#petViewport canvas{display:block;width:100%!important;height:100%!important}
+#bubble{position:absolute;left:calc(50% + 52px);top:94px;background:white;border:2px solid #333;border-radius:14px;padding:8px 12px;font-weight:900;font-size:13px;opacity:0;transform:translateY(5px) scale(.94);transition:.18s;white-space:nowrap}
+#bubble.show{opacity:1;transform:none}
+#bubble:before{content:"";position:absolute;left:-8px;bottom:9px;width:12px;height:12px;background:white;border-left:2px solid #333;border-bottom:2px solid #333;transform:rotate(45deg)}
+#eventLabel{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:clamp(22px,7vw,54px);font-weight:950;letter-spacing:-.04em;text-align:center;opacity:0;transition:.35s;text-shadow:0 2px 18px #fff}
+#eventLabel.show{opacity:1}
+#controls{position:absolute;inset:0;pointer-events:none}
+.pad{position:absolute;bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px));width:112px;height:112px;border-radius:50%;border:1px solid #3334;background:#fff3;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:auto;touch-action:none}
+#move{left:max(18px,env(safe-area-inset-left))}
+#look{right:max(18px,env(safe-area-inset-right))}
+.nub{position:absolute;left:36px;top:36px;width:40px;height:40px;border-radius:50%;background:#3338;transform:translate(var(--x,0px),var(--y,0px))}
+#boot{position:fixed;inset:0;z-index:20;background:#d9d6cf;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:28px}
+#boot strong{font-size:18px;letter-spacing:-.02em}
+#boot small{max-width:380px;line-height:1.5;opacity:.62}
+#boot.hide{display:none}
+#error{color:#6f2525}
+#assetBadge{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));padding:6px 9px;border-radius:999px;background:#fff8;font-size:9px;font-weight:800;letter-spacing:.08em;opacity:.45}
+@media(pointer:fine){.pad{display:none}}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="ui">
+  <div id="title">PLEASE STOP, GPT<div id="sub">GO LIMITLESS · SURPRISE ME</div></div>
+  <div id="mirror"><div id="petViewport"></div></div>
+  <div id="bubble">⚠ 위험!</div>
+  <div id="eventLabel"></div>
+  <div id="hint">WASD / 왼쪽 패드로 이동</div>
+  <div id="controls">
+    <div class="pad" id="move"><div class="nub"></div></div>
+    <div class="pad" id="look"><div class="nub"></div></div>
+  </div>
+</div>
+<div id="boot">
+  <strong id="bootTitle">3D ENGINE LOADING</strong>
+  <small id="bootText">Safari 호환 엔진을 준비하는 중입니다.</small>
+</div>
+<script>
+(function loadLibraries(){
+  var threeUrls=["https://cdnjs.cloudflare.com/ajax/libs/three.js/0.128.0/three.min.js","https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js","https://unpkg.com/three@0.128.0/build/three.min.js"];
+  var loaderUrls=["https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js","https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"];
+  function loadFirst(urls,test,done,fail){var i=0;function next(){if(test()){done();return;}if(i>=urls.length){fail();return;}var s=document.createElement('script');s.src=urls[i++];s.async=true;s.crossOrigin='anonymous';s.onload=function(){if(test())done();else next();};s.onerror=next;document.head.appendChild(s);}next();}
+  function fatal(msg){document.getElementById('bootTitle').textContent='3D LIBRARY LOAD FAILED';document.getElementById('bootText').textContent=msg;}
+  loadFirst(threeUrls,function(){return !!window.THREE;},function(){document.getElementById('bootText').textContent='Sketchbook GLB loader를 준비하는 중입니다.';loadFirst(loaderUrls,function(){return !!(window.THREE&&THREE.GLTFLoader);},function(){window.startPleaseStopGPT();},function(){fatal('GLTFLoader를 불러오지 못했습니다. 인터넷 연결 상태에서 Safari로 다시 열어주세요.');});},function(){fatal('Three.js를 불러오지 못했습니다. 인터넷 연결 상태에서 Safari로 다시 열어주세요.');});
+})();
+</script>
+<script>
+window.startPleaseStopGPT=function(){
+try{
+  if(!window.WebGLRenderingContext)throw new Error('WebGL is not supported on this browser.');
+  var THREE=window.THREE;
+  var scene=new THREE.Scene();scene.background=new THREE.Color(0xd9d6cf);scene.fog=new THREE.Fog(0xd9d6cf,40,165);
+  var camera=new THREE.PerspectiveCamera(57,innerWidth/innerHeight,.1,300);
+  var renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;document.getElementById('stage').appendChild(renderer.domElement);
+  var petView=document.getElementById('petViewport');var petRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});petRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));petRenderer.setSize(petView.clientWidth,petView.clientHeight,false);petRenderer.outputEncoding=THREE.sRGBEncoding;petRenderer.setClearColor(0x000000,0);petView.appendChild(petRenderer.domElement);var petScene=new THREE.Scene();var petCamera=new THREE.PerspectiveCamera(30,petView.clientWidth/petView.clientHeight,.1,20);petCamera.position.set(0,.2,7.5);petScene.add(new THREE.AmbientLight(0xffffff,1.8));var petLight=new THREE.DirectionalLight(0xffffff,2.2);petLight.position.set(2,4,5);petScene.add(petLight);var petRim=new THREE.DirectionalLight(0x88aaff,1.2);petRim.position.set(-3,1,2);petScene.add(petRim);
+  scene.add(new THREE.HemisphereLight(0xf5f1e8,0x77736b,2.0));var sun=new THREE.DirectionalLight(0xffffff,2.8);sun.position.set(-28,38,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;scene.add(sun);
+  var gray=new THREE.MeshStandardMaterial({color:0x85837e,roughness:.88,metalness:.04}),gray2=new THREE.MeshStandardMaterial({color:0x9a9790,roughness:.96}),roadMat=new THREE.MeshStandardMaterial({color:0x74736f,roughness:1}),sandMat=new THREE.MeshStandardMaterial({color:0xb9b2a5,roughness:1}),stripeMat=new THREE.MeshStandardMaterial({color:0xc8c4bb,roughness:1});
+  var ground=new THREE.Mesh(new THREE.PlaneGeometry(360,360),sandMat);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+  var road=new THREE.Mesh(new THREE.BoxGeometry(7.2,.16,190),roadMat);road.position.set(0,.08,-55);road.receiveShadow=true;scene.add(road);for(var z=28;z>-150;z-=12){var stripe=new THREE.Mesh(new THREE.BoxGeometry(.12,.03,4.4),stripeMat);stripe.position.set(0,.175,z);scene.add(stripe);}
+  for(var i=0;i<30;i++){var rg=new THREE.DodecahedronGeometry(THREE.MathUtils.randFloat(1.1,4.2),0),r=new THREE.Mesh(rg,(i%5===0)?gray2:gray);r.scale.y=THREE.MathUtils.randFloat(.45,1.35);r.position.set((Math.random()<.5?-1:1)*THREE.MathUtils.randFloat(8,52),THREE.MathUtils.randFloat(.45,1.5),THREE.MathUtils.randFloat(-150,42));r.rotation.set(Math.random(),Math.random(),Math.random());r.castShadow=true;r.receiveShadow=true;scene.add(r);}
+  var mesa=new THREE.Group();for(var m=0;m<6;m++){var slab=new THREE.Mesh(new THREE.BoxGeometry(13-m*1.2,1.8,7-m*.65),gray2);slab.position.set(28,m*1.45-.25,-105);slab.rotation.y=-.22;slab.castShadow=true;mesa.add(slab);}scene.add(mesa);
+  var vehicleRoot=new THREE.Group();vehicleRoot.position.set(0,.43,25);scene.add(vehicleRoot);var vehicleLean=new THREE.Group();vehicleRoot.add(vehicleLean);var carModel=null,characterModel=null,characterMixer=null,wheels=[],steeringWheels=[],wheelSpin=0;
+  var loadingShadow=new THREE.Mesh(new THREE.CircleGeometry(1.25,24),new THREE.MeshBasicMaterial({color:0x373735,transparent:true,opacity:.13,depthWrite:false}));loadingShadow.rotation.x=-Math.PI/2;loadingShadow.position.y=-.415;vehicleRoot.add(loadingShadow);
+  var eventGroup=new THREE.Group();scene.add(eventGroup);var pillars=[];for(var pIndex=0;pIndex<11;pIndex++){var p=new THREE.Mesh(new THREE.BoxGeometry(2,1,2),gray);p.position.set((pIndex-5)*4,-.5,-72);p.castShadow=true;p.receiveShadow=true;eventGroup.add(p);pillars.push(p);}
+  var petRoot=new THREE.Group(),petRig=new THREE.Group();var stringMat=new THREE.MeshStandardMaterial({color:0x2c2c34,roughness:.8}),blueA=new THREE.MeshStandardMaterial({color:0x79b8ff,roughness:.48,metalness:.08}),blueB=new THREE.MeshStandardMaterial({color:0x5a82ff,roughness:.42,metalness:.10}),blueC=new THREE.MeshStandardMaterial({color:0x6d68ff,roughness:.44,metalness:.12}),visorMat=new THREE.MeshStandardMaterial({color:0x24376a,roughness:.55,metalness:.35}),glyphMat=new THREE.MeshStandardMaterial({color:0xeaf6ff,emissive:0xdbeeff,emissiveIntensity:.42,roughness:.25});
+  var stringMesh=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1.4,8),stringMat);stringMesh.position.y=.7;petRoot.add(stringMesh);petRig.position.y=-.05;petRoot.add(petRig);function addBall(x,y,zv,s,mat){var mesh=new THREE.Mesh(new THREE.SphereGeometry(s,16,16),mat);mesh.position.set(x,y,zv);petRig.add(mesh);return mesh;}
+  addBall(0,.78,0,.80,blueA);addBall(-.62,.78,.04,.48,blueB);addBall(.62,.78,.04,.48,blueB);addBall(-.34,1.34,.02,.42,blueA);addBall(.34,1.34,.02,.42,blueA);addBall(0,1.48,0,.38,blueA);addBall(-.74,.30,.06,.34,blueB);addBall(.74,.30,.06,.34,blueB);
+  var visor=new THREE.Mesh(new THREE.BoxGeometry(1.48,.92,.68),visorMat);visor.position.set(0,.66,.35);visor.scale.set(1,1,.92);petRig.add(visor);function makeGlyph(points,x,y,zv){var curve=new THREE.CatmullRomCurve3(points.map(function(pt){return new THREE.Vector3(pt[0],pt[1],0);}));var geo=new THREE.TubeGeometry(curve,18,.045,8,false),mesh=new THREE.Mesh(geo,glyphMat);mesh.position.set(x,y,zv);petRig.add(mesh);return mesh;}
+  makeGlyph([[-.18,.16],[.04,0],[-.18,-.16]],-.37,.71,.73);var dash=new THREE.Mesh(new THREE.BoxGeometry(.34,.07,.08),glyphMat);dash.position.set(.38,.71,.73);petRig.add(dash);var bodyCore=new THREE.Mesh(new THREE.SphereGeometry(.54,16,16),blueB);bodyCore.position.set(0,-.34,0);bodyCore.scale.set(1,.92,.86);petRig.add(bodyCore);var bodyBelly=new THREE.Mesh(new THREE.BoxGeometry(.92,.65,.62),blueC);bodyBelly.position.set(0,-.42,.03);petRig.add(bodyBelly);var chestArrow=makeGlyph([[-.14,.10],[.02,0],[-.14,-.10]],-.08,-.35,.35);chestArrow.scale.set(.82,.82,.82);var chestDash=new THREE.Mesh(new THREE.BoxGeometry(.22,.05,.06),glyphMat);chestDash.position.set(.21,-.35,.35);petRig.add(chestDash);function limb(x,y,zv,w,h,d,mat){var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,zv);petRig.add(mesh);return mesh;}limb(-.54,-.44,.02,.22,.60,.22,blueB).rotation.z=.08;limb(.54,-.44,.02,.22,.60,.22,blueB).rotation.z=-.08;limb(-.18,-1.02,0,.26,.52,.26,blueB);limb(.18,-1.02,0,.26,.52,.26,blueB);addBall(-.18,-1.28,.02,.13,blueC);addBall(.18,-1.28,.02,.13,blueC);addBall(-.54,-.74,.04,.11,blueC);addBall(.54,-.74,.04,.11,blueC);petRig.rotation.y=.18;petScene.add(petRoot);
+  var gltfLoader=new THREE.GLTFLoader();var CAR_URLS=['assets/sketchbook/car.glb'];var CHARACTER_URLS=['assets/sketchbook/boxman.glb'];
+  function loadGLB(urls,label,onProgress){return new Promise(function(resolve,reject){var idx=0,lastError=null;function next(){if(idx>=urls.length){reject(lastError||new Error(label+' load failed'));return;}var url=urls[idx++];gltfLoader.load(url,function(gltf){resolve(gltf);},function(xhr){if(xhr&&xhr.total&&onProgress)onProgress(Math.round(xhr.loaded/xhr.total*100));},function(err){lastError=err;next();});}next();});}
+  var boot=document.getElementById('boot'),bootTitle=document.getElementById('bootTitle'),bootText=document.getElementById('bootText');bootTitle.textContent='SKETCHBOOK ASSETS';bootText.textContent='원본 자동차와 캐릭터를 불러오는 중입니다.';var loadStatus={car:0,character:0};function updateLoadText(){bootText.textContent='CAR '+loadStatus.car+'% · BOXMAN '+loadStatus.character+'%';}
+  Promise.all([loadGLB(CAR_URLS,'car',function(v){loadStatus.car=v;updateLoadText();}),loadGLB(CHARACTER_URLS,'boxman',function(v){loadStatus.character=v;updateLoadText();})]).then(function(results){var carGltf=results[0],charGltf=results[1];carModel=carGltf.scene;carModel.rotation.y=Math.PI;carModel.traverse(function(obj){if(obj.userData&&obj.userData.data==='collision'){obj.visible=false;return;}if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}if(obj.userData&&obj.userData.data==='wheel'){obj.userData.__baseRot={x:obj.rotation.x,y:obj.rotation.y,z:obj.rotation.z};wheels.push(obj);if(String(obj.userData.steering).toLowerCase()==='true')steeringWheels.push(obj);}});vehicleLean.add(carModel);loadingShadow.visible=false;var seat=carModel.getObjectByName('seat_1');characterModel=charGltf.scene;characterModel.traverse(function(obj){if(obj.userData&&obj.userData.data==='collision'){obj.visible=false;return;}if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}});carModel.add(characterModel);if(seat){characterModel.position.set(seat.position.x,seat.position.y+.6,seat.position.z);characterModel.quaternion.copy(seat.quaternion);}else characterModel.position.set(.2457,.655,.087);characterMixer=new THREE.AnimationMixer(characterModel);var driving=THREE.AnimationClip.findByName(charGltf.animations,'driving');if(!driving&&charGltf.animations.length){for(var ai=0;ai<charGltf.animations.length;ai++){if(/driv/i.test(charGltf.animations[ai].name)){driving=charGltf.animations[ai];break;}}}if(driving)characterMixer.clipAction(driving).play();boot.classList.add('hide');}).catch(function(err){console.error('Sketchbook asset load error',err);bootTitle.textContent='SKETCHBOOK ASSET ERROR';bootText.textContent='원본 car.glb / boxman.glb를 불러오지 못했습니다. 인터넷 연결 후 Safari에서 다시 실행해주세요.';});
+  var keys={},moveX=0,moveY=0,lookX=0;addEventListener('keydown',function(e){keys[e.code]=true;});addEventListener('keyup',function(e){keys[e.code]=false;});function bindPad(el,onMove){var nub=el.querySelector('.nub'),id=null;function set(e){var rect=el.getBoundingClientRect(),dx=e.clientX-(rect.left+rect.width/2),dy=e.clientY-(rect.top+rect.height/2),len=Math.hypot(dx,dy)||1,mag=Math.min(36,len),x=dx/len*mag,y=dy/len*mag;nub.style.setProperty('--x',x+'px');nub.style.setProperty('--y',y+'px');onMove(x/36,y/36);}el.addEventListener('pointerdown',function(e){id=e.pointerId;try{el.setPointerCapture(id);}catch(_){}set(e);});el.addEventListener('pointermove',function(e){if(e.pointerId===id)set(e);});function end(e){if(e.pointerId!==id)return;id=null;nub.style.setProperty('--x','0px');nub.style.setProperty('--y','0px');onMove(0,0);}el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);}bindPad(document.getElementById('move'),function(x,y){moveX=x;moveY=y;});bindPad(document.getElementById('look'),function(x){lookX=x;});
+  var bubble=document.getElementById('bubble'),label=document.getElementById('eventLabel'),hint=document.getElementById('hint'),elapsed=0,eventStage=0,eventT=0,beeps=0,lastBeep=-1,AudioCtx=window.AudioContext||window.webkitAudioContext,audio=null;function ensureAudio(){if(!AudioCtx)return;if(!audio)audio=new AudioCtx();if(audio.state==='suspended')audio.resume();}function beep(){if(!AudioCtx)return;ensureAudio();var o=audio.createOscillator(),g=audio.createGain();o.frequency.value=920;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(.08,audio.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+.09);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.1);}addEventListener('pointerdown',ensureAudio,{once:true});function startWarning(){eventStage=1;eventT=0;beeps=0;lastBeep=-1;bubble.classList.add('show');}function startEvent(){eventStage=2;eventT=0;bubble.classList.remove('show');label.textContent='WORLD PATCH DETECTED';label.classList.add('show');setTimeout(function(){label.classList.remove('show');},1800);}
+  var velocity=0,steer=0,clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);var dt=Math.min(.033,clock.getDelta());elapsed+=dt;if(characterMixer)characterMixer.update(dt);var throttle=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-moveY,steerInput=(keys.KeyA||keys.ArrowLeft?1:0)-(keys.KeyD||keys.ArrowRight?1:0)-moveX,targetVelocity=throttle*6.1;velocity=THREE.MathUtils.lerp(velocity,targetVelocity,1-Math.exp(-dt*(throttle?3.1:4.5)));steer=THREE.MathUtils.lerp(steer,steerInput,1-Math.exp(-dt*5.2));var speedRatio=Math.min(1,Math.abs(velocity)/6.1);vehicleRoot.rotation.y+=steer*dt*(.55+.45*speedRatio)*(velocity>=0?1:-1);vehicleRoot.position.x-=Math.sin(vehicleRoot.rotation.y)*velocity*dt;vehicleRoot.position.z-=Math.cos(vehicleRoot.rotation.y)*velocity*dt;vehicleRoot.position.x=THREE.MathUtils.clamp(vehicleRoot.position.x,-3.05,3.05);vehicleLean.rotation.z=THREE.MathUtils.lerp(vehicleLean.rotation.z,-steer*.055*speedRatio,1-Math.exp(-dt*4));vehicleLean.rotation.x=THREE.MathUtils.lerp(vehicleLean.rotation.x,-throttle*.018,1-Math.exp(-dt*4));wheelSpin+=velocity*dt*2.15;for(var wi=0;wi<wheels.length;wi++){var w=wheels[wi],br=w.userData.__baseRot||{x:0,y:0,z:0};w.rotation.x=br.x+wheelSpin;if(String(w.userData.steering).toLowerCase()==='true')w.rotation.y=br.y-steer*.34;}if(elapsed>5)hint.style.opacity='0';if(eventStage===0&&(elapsed>18||vehicleRoot.position.z<2))startWarning();var petSwingZ=0,petSwingX=0;if(eventStage===1){eventT+=dt;petSwingZ=Math.sin(eventT*18)*.18;petSwingX=Math.sin(eventT*9)*.06;if(beeps<3&&eventT-lastBeep>.34){beep();beeps++;lastBeep=eventT;}if(eventT>2.8)startEvent();}else{petSwingZ=(-steer*.28)+Math.sin(elapsed*3)*.04;petSwingX=(throttle*.06)+Math.cos(elapsed*2.2)*.015;}if(eventStage===2){eventT+=dt;for(var j=0;j<pillars.length;j++){var pp=pillars[j],local=Math.max(0,eventT-j*.09),target=Math.min(1,local/1.6),h=THREE.MathUtils.smoothstep(target,0,1);pp.scale.y=1+10*h;pp.position.y=-.5+5*h;pp.rotation.y=.08*Math.sin(j*1.7)*h;}if(eventT>5.5)eventStage=3;petSwingZ+=Math.sin(eventT*8)*.03;}petRig.rotation.z=THREE.MathUtils.lerp(petRig.rotation.z,petSwingZ,.15);petRig.rotation.x=THREE.MathUtils.lerp(petRig.rotation.x,petSwingX,.15);petRig.rotation.y=.18+Math.sin(elapsed*1.1)*.05;petRoot.rotation.z=Math.sin(elapsed*.5)*.03;visor.position.z=.35+Math.sin(elapsed*2.4)*.005;var camOffset=new THREE.Vector3(0,2.8,5.25);camOffset.applyAxisAngle(new THREE.Vector3(0,1,0),vehicleRoot.rotation.y+lookX*.34);var camTarget=vehicleRoot.position.clone().add(camOffset);camera.position.lerp(camTarget,1-Math.exp(-dt*6.5));var forwardLook=new THREE.Vector3(0,.65,-6.8);forwardLook.applyAxisAngle(new THREE.Vector3(0,1,0),vehicleRoot.rotation.y);camera.lookAt(vehicleRoot.position.clone().add(forwardLook));renderer.render(scene,camera);petRenderer.render(petScene,petCamera);}animate();
+  addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight,false);petCamera.aspect=petView.clientWidth/petView.clientHeight;petCamera.updateProjectionMatrix();petRenderer.setSize(petView.clientWidth,petView.clientHeight,false);});
+}catch(err){console.error(err);var boot=document.getElementById('boot');boot.classList.remove('hide');document.getElementById('bootTitle').textContent='3D SCENE ERROR';document.getElementById('bootText').textContent=String(err&&err.message?err.message:err);}}
+</script>
+</body>
+</html>
