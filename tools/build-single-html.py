@@ -48,7 +48,8 @@ def main() -> None:
         'else{setTimeout(function(){window.startPleaseStopGPT&&window.startPleaseStopGPT();},0);}'
         '});</script>'
     )
-    built, count = loader_pattern.subn(inline_libs, source, count=1)
+    # Use a callable replacement so backslashes inside minified library code are treated literally.
+    built, count = loader_pattern.subn(lambda _m: inline_libs, source, count=1)
     if count != 1:
         raise RuntimeError("Could not locate the external Three.js/GLTFLoader loader block.")
 
@@ -71,15 +72,15 @@ def main() -> None:
         "gltfLoader.parse(b64ToArrayBuffer(b64),'',resolve,reject);"
         "}catch(err){reject(err);}});}\n"
     )
-    built, count = old_asset_block.subn(embedded_loader, built, count=1)
+    built, count = old_asset_block.subn(lambda _m: embedded_loader, built, count=1)
     if count != 1:
         raise RuntimeError("Could not locate the GLB URL loader block.")
 
-    built = built.replace(
-        "Promise.all([loadGLB(CAR_URLS,'car',function(v){loadStatus.car=v;updateLoadText();}),loadGLB(CHARACTER_URLS,'boxman',function(v){loadStatus.character=v;updateLoadText();})])",
-        "Promise.all([loadEmbeddedGLB(CAR_B64,'car',function(v){loadStatus.car=v;updateLoadText();}),loadEmbeddedGLB(CHARACTER_B64,'boxman',function(v){loadStatus.character=v;updateLoadText();})])",
-        1,
-    )
+    old_promise = "Promise.all([loadGLB(CAR_URLS,'car',function(v){loadStatus.car=v;updateLoadText();}),loadGLB(CHARACTER_URLS,'boxman',function(v){loadStatus.character=v;updateLoadText();})])"
+    new_promise = "Promise.all([loadEmbeddedGLB(CAR_B64,'car',function(v){loadStatus.car=v;updateLoadText();}),loadEmbeddedGLB(CHARACTER_B64,'boxman',function(v){loadStatus.character=v;updateLoadText();})])"
+    if old_promise not in built:
+        raise RuntimeError("Could not locate the Promise.all asset load call.")
+    built = built.replace(old_promise, new_promise, 1)
 
     # The final file must not rely on network or repository-relative runtime assets.
     forbidden = [
@@ -90,6 +91,9 @@ def main() -> None:
         "assets/sketchbook/boxman.glb",
         "raw.githubusercontent.com/swift502",
         "cdn.jsdelivr.net/gh/swift502",
+        "CAR_URLS",
+        "CHARACTER_URLS",
+        "loadGLB(",
     ]
     for token in forbidden:
         if token in built:
