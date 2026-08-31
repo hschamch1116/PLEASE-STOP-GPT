@@ -44,13 +44,31 @@ jobs:
           Distributed under the MIT License. See `LICENSE` in this directory.
           EOF
 
-      - name: Commit vendored assets
+      - name: Point game to local vendored assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old_car = "var CAR_URLS=['https://cdn.jsdelivr.net/gh/swift502/Sketchbook@master/build/assets/car.glb','https://raw.githubusercontent.com/swift502/Sketchbook/master/build/assets/car.glb'];"
+          new_car = "var CAR_URLS=['assets/sketchbook/car.glb'];"
+          old_char = "var CHARACTER_URLS=['https://cdn.jsdelivr.net/gh/swift502/Sketchbook@master/build/assets/boxman.glb','https://raw.githubusercontent.com/swift502/Sketchbook/master/build/assets/boxman.glb'];"
+          new_char = "var CHARACTER_URLS=['assets/sketchbook/boxman.glb'];"
+          if old_car not in s or old_char not in s:
+              raise SystemExit('Expected Sketchbook remote asset URL block not found in index.html')
+          s = s.replace(old_car, new_car).replace(old_char, new_char)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit vendored assets and local paths
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/sketchbook
+          git add assets/sketchbook index.html
           if git diff --cached --quiet; then
             echo "Sketchbook assets already up to date."
             exit 0
