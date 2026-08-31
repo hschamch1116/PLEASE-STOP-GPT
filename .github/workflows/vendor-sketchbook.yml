@@ -1,0 +1,59 @@
+name: Vendor Sketchbook runtime assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-sketchbook.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Sketchbook runtime assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/sketchbook
+          curl -fL --retry 3 --retry-delay 2 \
+            https://raw.githubusercontent.com/swift502/Sketchbook/master/build/assets/car.glb \
+            -o assets/sketchbook/car.glb
+          curl -fL --retry 3 --retry-delay 2 \
+            https://raw.githubusercontent.com/swift502/Sketchbook/master/build/assets/boxman.glb \
+            -o assets/sketchbook/boxman.glb
+          curl -fL --retry 3 --retry-delay 2 \
+            https://raw.githubusercontent.com/swift502/Sketchbook/master/LICENSE \
+            -o assets/sketchbook/LICENSE
+          cat > assets/sketchbook/README.md <<'EOF'
+          # Sketchbook runtime assets
+
+          Vendored from https://github.com/swift502/Sketchbook
+
+          Included for PLEASE STOP, GPT runtime use:
+          - `car.glb`
+          - `boxman.glb`
+          - `LICENSE`
+
+          Source project copyright (c) 2020 swift502.
+          Distributed under the MIT License. See `LICENSE` in this directory.
+          EOF
+
+      - name: Commit vendored assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/sketchbook
+          if git diff --cached --quiet; then
+            echo "Sketchbook assets already up to date."
+            exit 0
+          fi
+          git commit -m "chore: vendor Sketchbook runtime assets"
+          git push
